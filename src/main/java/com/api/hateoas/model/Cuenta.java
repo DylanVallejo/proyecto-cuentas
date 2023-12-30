@@ -20,7 +20,7 @@ public class Cuenta {
     @Column(length = 20, nullable = false, unique = true)
     private String numeroDeCuenta;
 
-    private float balance;
+    private float monto;
 
     public Cuenta(Integer id, String numeroDeCuenta) {
         this.id = id;
