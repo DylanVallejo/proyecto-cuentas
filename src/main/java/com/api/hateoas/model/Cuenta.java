@@ -4,13 +4,17 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.hateoas.RepresentationModel;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 @Entity
 @Table(name = "cuentas")
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
-public class Cuenta {
+@AllArgsConstructor//para integrar hateoas le indicamos que extienda de la clase RepresentationModel
+public class Cuenta extends RepresentationModel<Cuenta> {
 
 
     @Id
