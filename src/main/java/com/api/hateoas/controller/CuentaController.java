@@ -2,6 +2,7 @@ package com.api.hateoas.controller;
 
 
 import com.api.hateoas.model.Cuenta;
+import com.api.hateoas.model.Monto;
 import com.api.hateoas.service.CuentaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.repository.query.Param;
@@ -15,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.swing.undo.CannotUndoException;
 import java.util.List;
 
 @RestController
@@ -34,6 +36,8 @@ public class CuentaController {
         }
         for (Cuenta cuenta:cuentas){
             cuenta.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuenta.getId())).withSelfRel());
+            cuenta.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuenta.getId(), null)).withRel("depositos"));
+            cuenta.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuenta.getId(), null)).withRel("retiros"));
             cuenta.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
         }
         CollectionModel<Cuenta> modelo = CollectionModel.of(cuentas);
@@ -49,6 +53,10 @@ public class CuentaController {
 //            indicamos con add que agregaremos enlaces en la respuesta json y llamamaos al metodo linkTo  withSelfRel
             cuenta.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuenta.getId())).withSelfRel());
 
+//              enlace para realizar depositos
+            cuenta.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuenta.getId(), null)).withRel("depositos"));
+//            enlace para realizar retiros
+            cuenta.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuenta.getId(), null)).withRel("retiros"));
 //            indicamos una relacion no propia que retornara una coleccion de enlaces
             cuenta.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
 //            cuenta.add(WebMvcLinkBuilder.linkTo(WebMvcLinkBuilder.methodOn(CuentaController.class).listarCuenta(cuenta.getId())).withSelfRel());
@@ -64,6 +72,8 @@ public class CuentaController {
 
 // le indicamos que se ha a gregado y vamos a adjuntar la cunta que se ha creado
         cuentaNueva.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaNueva.getId())).withSelfRel());
+        cuentaNueva.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaNueva.getId(), null)).withRel("depositos"));
+        cuentaNueva.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaNueva.getId(), null)).withRel("retiros"));
         cuentaNueva.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
         return  ResponseEntity.created(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaNueva.getId())).toUri()).body(cuentaNueva);
     }
@@ -75,8 +85,33 @@ public class CuentaController {
         Cuenta cuentaEditada = cuentaService.save(cuenta);
 
         cuentaEditada.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaEditada.getId())).withSelfRel());
+        cuentaEditada.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaEditada.getId(), null)).withRel("depositos"));
+        cuentaEditada.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaEditada.getId(), null)).withRel("retiros"));
         cuentaEditada.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
         return new ResponseEntity<>(cuentaEditada, HttpStatus.OK);
+    }
+
+// AQUI USARMAOS PatchMapping ES IGUAL QUE EL PUTMAPPING SE USA PARA ACTULIZAR *** UN SOLO CAMPO ***  EN ESTE CASO EL MONTO
+//    estoy usando el id cmabiarlo por el numero de cuenta ya que para depositar uso el numero de cuenta no el id
+    @PatchMapping("/{id}/deposito")
+    public ResponseEntity<Cuenta> depositarDinero(@PathVariable Integer id, @RequestBody Monto monto){
+        Cuenta cuentaBBDD = cuentaService.depositar(monto.getMonto(), id);
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaBBDD.getId())).withSelfRel());
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaBBDD.getId(), null)).withRel("depositos"));
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaBBDD.getId(), null)).withRel("retiros"));
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
+        return new ResponseEntity<>(cuentaBBDD, HttpStatus.OK);
+    }
+
+    @PatchMapping("/{id}/retiro")
+    public ResponseEntity<Cuenta> retirarDinero(@PathVariable Integer id, @RequestBody Monto monto){
+        Cuenta cuentaBBDD = cuentaService.retirar(monto.getMonto(), id);
+
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaBBDD.getId())).withSelfRel());
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaBBDD.getId(), null)).withRel("depositos"));
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).depositarDinero(cuentaBBDD.getId(), null)).withRel("retiros"));
+        cuentaBBDD.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
+        return new ResponseEntity<>(cuentaBBDD, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
