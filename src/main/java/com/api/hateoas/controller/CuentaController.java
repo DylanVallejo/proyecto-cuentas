@@ -61,7 +61,11 @@ public class CuentaController {
     @PostMapping
     public ResponseEntity<Cuenta> guardarCuenta(@RequestBody Cuenta cuenta){
         Cuenta cuentaNueva = cuentaService.save(cuenta);
-        return new ResponseEntity<>(cuenta, HttpStatus.CREATED);
+
+// le indicamos que se ha a gregado y vamos a adjuntar la cunta que se ha creado
+        cuentaNueva.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaNueva.getId())).withSelfRel());
+        cuentaNueva.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
+        return  ResponseEntity.created(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaNueva.getId())).toUri()).body(cuentaNueva);
     }
 
 
@@ -69,6 +73,9 @@ public class CuentaController {
     @PutMapping
     public ResponseEntity<Cuenta> editarCuenta(@RequestBody Cuenta cuenta){
         Cuenta cuentaEditada = cuentaService.save(cuenta);
+
+        cuentaEditada.add(linkTo(methodOn(CuentaController.class).listarCuenta(cuentaEditada.getId())).withSelfRel());
+        cuentaEditada.add(linkTo(methodOn(CuentaController.class).listarCuentas()).withRel(IanaLinkRelations.COLLECTION));
         return new ResponseEntity<>(cuentaEditada, HttpStatus.OK);
     }
 
